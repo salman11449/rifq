@@ -1,0 +1,21 @@
+{
+  "name": "رِفْق — رفيق الطمأنينة",
+  "short_name": "رِفْق",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#061814",
+  "theme_color": "#061814",
+  "description": "أذكار ومسبحة ووِرد وبستان من الذكر ودفتر خواطر — مجاني بالكامل، بلا إعلانات ولا حساب ولا تتبّع. كل شيء في جهازك.",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230A231E'/%3E%3Cg fill='none' stroke='%23D8B878' stroke-width='14' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M256 74c61 55 96 117 96 178 0 52-25 96-61 122-18 13-27 38-27 69h-16c0-31-9-56-27-69-36-26-61-70-61-122 0-61 35-123 96-178Z'/%3E%3Cpath d='M256 180l36 85-36 85-36-85Z'/%3E%3C/g%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
