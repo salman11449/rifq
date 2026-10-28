@@ -94,7 +94,10 @@
 }
 
 *{box-sizing:border-box}
-html,body{height:100%}
+html,body{min-height:100%}
+/* ملاحظة: كان height:100% هنا، وكان يمنع التمرير في أي شاشة أطول من النافذة */
+html{height:auto}
+body{height:auto}
 /* آيفون: المنع القاطع للتمرير الأفقي (كان يظهر 1px على شاشات 320) */
 html{overflow-x:hidden}
 @supports (-webkit-touch-callout: none){
@@ -3999,6 +4002,17 @@ window.SAKINA = {
     }, 180);
   }
 
+  /* حفظ موضع التمرير في الأذكار بهدوء */
+  let scrollTick = null;
+  window.addEventListener('scroll', () => {
+    if (state.screen !== 'adhkar') return;
+    clearTimeout(scrollTick);
+    scrollTick = setTimeout(() => {
+      const el = $('#screen-adhkar');
+      if (el) { scrollMemory.adhkar = Math.max(0, window.scrollY - el.offsetTop); state.adhkarScroll = scrollMemory.adhkar; save(); }
+    }, 300);
+  }, { passive: true });
+
   const dayKey = (d = new Date()) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
   const shiftDay = n => { const d = new Date(); d.setDate(d.getDate() + n); return dayKey(d); };
 
@@ -4020,6 +4034,8 @@ window.SAKINA = {
     quoteIdx: 0,
     publicURL: '',
     momentIdx: null,
+    adhkarCat: 'morning',      // التصنيف المختار في الأذكار — يبقى كما تركه
+    adhkarScroll: 0,           // موضع التمرير داخل الأذكار
     screen: 'home'
   };
 
@@ -4114,8 +4130,20 @@ window.SAKINA = {
 
   /* ---------------- navigation ---------------- */
   const screens = ['home', 'tasbih', 'adhkar', 'garden', 'journal'];
+  const scrollMemory = { adhkar: state.adhkarScroll || 0 };
+  let lastScreen = null;
   function go(name, opts = {}) {
     if (!screens.includes(name)) name = 'home';
+    /* احفظ موضع التمرير للشاشة التي تغادرها، واستعده لو رجعت إليها */
+    if (lastScreen && lastScreen !== name) {
+      const prev = $('#screen-' + lastScreen);
+      if (prev && prev.classList.contains('is-active')) {
+        const top = prev.offsetTop;
+        scrollMemory[lastScreen] = Math.max(0, window.scrollY - top);
+        if (lastScreen === 'adhkar') { state.adhkarScroll = scrollMemory.adhkar; save(); }
+      }
+    }
+    lastScreen = name;
     screens.forEach(s => {
       const el = $('#screen-' + s);
       if (el) el.classList.toggle('is-active', s === name);
@@ -4126,7 +4154,12 @@ window.SAKINA = {
       }
     });
     state.screen = name; save();
-    if (!opts.silent) window.scrollTo({ top: 0, behavior: state.motion ? 'auto' : 'smooth' });
+    if (!opts.silent) {
+      const remembered = scrollMemory[name];
+      const el = $('#screen-' + name);
+      const target = (remembered && el) ? el.offsetTop + remembered : 0;
+      window.scrollTo({ top: target, behavior: 'auto' });
+    }
   }
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-go]');
@@ -4565,14 +4598,22 @@ window.SAKINA = {
     for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
     return (h >>> 0).toString(36);
   };
-  let activeCat = 'morning';
+  let activeCat = state.adhkarCat || 'morning';
 
   function renderCats() {
     $('#catChips').innerHTML = D.adhkar.map(c =>
       `<button class="chip" data-cat="${c.id}" aria-pressed="${c.id === activeCat}">${c.name}</button>`).join('');
     $$('#catChips .chip').forEach(b => b.addEventListener('click', () => {
       activeCat = b.dataset.cat;
+      state.adhkarCat = activeCat;
+      state.adhkarScroll = 0;
+      save();
       renderCats(); renderAdhkar();
+      /* إن كان المستخدم في أسفل القائمة يعود لأعلى التصنيف الجديد */
+      const scr = $('#screen-adhkar');
+      if (scr && !scr.classList.contains('is-active')) return;
+      const top = scr ? scr.offsetTop - 10 : 0;
+      if (window.scrollY > top - 40) window.scrollTo({ top, behavior: 'auto' });
     }));
   }
 
